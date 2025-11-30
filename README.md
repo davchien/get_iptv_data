@@ -26,7 +26,7 @@ pip install requests
 python get_iptv_data.py
 ##5. 脚本运行完成后，在项目目录下会生成iptv.m3u和iptv.txt文件，以及iptv_discarded.csv和iptv_discarded.m3u文件。
 插入图片
-![image.png]("D:\Users\chien\Pictures\ScreenShot_2025-11-30_162231_611.png")
+![image.png]("(https://github.com/davchien/get_iptv_data/blob/master/images/ScreenShot_2025-11-30_162231_611.png)")
 
 #IPTV频道数据抓包方法
 ##1. 确保已安装Wireshark等抓包工具。
