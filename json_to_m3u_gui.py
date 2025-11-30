@@ -178,15 +178,24 @@ class JSONtoM3UGUI:
             
             # 构建频道字典，用于快速查找
             channel_dict = {}
+            
+            # 记录被抛弃的频道
+            discarded_channels = []
+            
             for channel in channels:
                 channel_name = channel.get('channelName', '')
                 channel_url = channel.get('channelURL', '')
+                channel_id = channel.get('channelID', '')
+                user_channel_id = channel.get('userChannelID', '')
                 
+                # 记录被抛弃的原因
                 if not channel_name or not channel_url:
+                    discarded_channels.append([channel_id, user_channel_id, channel_name, channel_url, "缺少频道名称或URL"])
                     continue
                 
                 # 只处理CSV文件中存在的频道，减少不必要的处理
                 if channel_name not in channel_mapping_set:
+                    discarded_channels.append([channel_id, user_channel_id, channel_name, channel_url, "不在映射表中"])
                     continue
                 
                 # 提取组播地址和端口
@@ -199,6 +208,8 @@ class JSONtoM3UGUI:
                     udpxy_url = f"http://{udpxy_ip}:{udpxy_port}/{protocol}/{multicast_ip}:{multicast_port}"
                     
                     channel_dict[channel_name] = udpxy_url
+                else:
+                    discarded_channels.append([channel_id, user_channel_id, channel_name, channel_url, "URL格式不正确"])
             
             # 生成M3U内容，按照CSV文件的顺序排序
             m3u_content = ["#EXTM3U x-tvg-url=\"http://epg.51zmt.top:8000/e.xml.gz\""]
@@ -245,8 +256,45 @@ class JSONtoM3UGUI:
             with open(txt_output_file, 'w', encoding='utf-8') as f:
                 f.write('\n'.join(txt_content))
             
+            # 写入被抛弃的频道CSV文件
+            discarded_csv_file = r"d:/Users/chien/PycharmProjects/testcode/program/get_iptv_data/iptv_discarded.csv"
+            if discarded_channels:
+                with open(discarded_csv_file, 'w', newline='', encoding='utf-8') as f:
+                    writer = csv.writer(f)
+                    # 写入表头
+                    writer.writerow(['channelID', 'userChannelID', 'channelName', 'channelURL', 'discardReason'])
+                    # 写入数据
+                    writer.writerows(discarded_channels)
+                
+                # 生成被抛弃频道的M3U文件
+                discarded_m3u_file = discarded_csv_file.rsplit('.', 1)[0] + '.m3u'
+                discarded_m3u_content = ["#EXTM3U x-tvg-url=\"http://epg.51zmt.top:8000/e.xml.gz\""]
+                
+                for channel_info in discarded_channels:
+                    channel_id, user_channel_id, channel_name, channel_url, discard_reason = channel_info
+                    
+                    # 只处理URL格式正确的频道
+                    if channel_url.startswith('igmp://'):
+                        multicast_part = channel_url[7:]
+                        multicast_ip, multicast_port = multicast_part.split(':')
+                        
+                        # 生成udpxy地址
+                        udpxy_url = f"http://{udpxy_ip}:{udpxy_port}/{protocol}/{multicast_ip}:{multicast_port}"
+                        
+                        # 添加到M3U内容
+                        discarded_m3u_content.append(f"#EXTINF:-1, tvg-name=\"{channel_name}\", {channel_name} ({discard_reason})")
+                        discarded_m3u_content.append(udpxy_url)
+                
+                # 写入被抛弃频道的M3U文件
+                with open(discarded_m3u_file, 'w', encoding='utf-8') as f:
+                    f.write('\n'.join(discarded_m3u_content))
+                
+                discarded_info = f"，被抛弃的频道已记录到 {discarded_csv_file} 和 {discarded_m3u_file}"
+            else:
+                discarded_info = "，没有被抛弃的频道"
+            
             self.status_var.set(f"转换完成！生成了 {len(m3u_content) // 2} 个频道")
-            messagebox.showinfo("成功", f"转换完成！输出文件：{output_file} 和 {txt_output_file}")
+            messagebox.showinfo("成功", f"转换完成！输出文件：{output_file} 和 {txt_output_file}{discarded_info}")
             
             # 询问用户是否关闭窗口
             result = messagebox.askyesno("询问", "转换已完成，是否关闭窗口？")
