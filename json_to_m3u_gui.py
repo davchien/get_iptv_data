@@ -158,7 +158,7 @@ class JSONtoM3UGUI:
             # 读取频道映射CSV文件，只读取一次
             mapping_file = r"d:/Users/chien/PycharmProjects/testcode/program/get_iptv_data/channel_mapping_utf8.csv"
             channel_mapping_list = []
-            channel_mapping_set = set()
+            channel_mapping_dict = {}
             
             with open(mapping_file, 'r', encoding='utf-8') as f:
                 reader = csv.DictReader(f)
@@ -167,7 +167,10 @@ class JSONtoM3UGUI:
                     epg_display_name = row['epg_display_name'].strip()
                     if bjtv_channel:
                         channel_mapping_list.append((bjtv_channel, epg_display_name))
-                        channel_mapping_set.add(bjtv_channel)
+                        channel_mapping_dict[bjtv_channel] = epg_display_name
+            
+            # 构建频道集合，用于快速查找
+            channel_mapping_set = set(channel_mapping_dict.keys())
             
             # 读取JSON文件
             with open(input_file, 'r', encoding='utf-8') as f:
@@ -193,8 +196,14 @@ class JSONtoM3UGUI:
                     discarded_channels.append([channel_id, user_channel_id, channel_name, channel_url, "缺少频道名称或URL"])
                     continue
                 
-                # 只处理CSV文件中存在的频道，减少不必要的处理
-                if channel_name not in channel_mapping_set:
+                # 检查频道是否在映射表中，忽略大小写和空格
+                matched_channel = None
+                for mapped_channel in channel_mapping_dict:
+                    if channel_name.strip() == mapped_channel.strip():
+                        matched_channel = mapped_channel
+                        break
+                
+                if not matched_channel:
                     discarded_channels.append([channel_id, user_channel_id, channel_name, channel_url, "不在映射表中"])
                     continue
                 
@@ -207,7 +216,8 @@ class JSONtoM3UGUI:
                     # 生成udpxy地址
                     udpxy_url = f"http://{udpxy_ip}:{udpxy_port}/{protocol}/{multicast_ip}:{multicast_port}"
                     
-                    channel_dict[channel_name] = udpxy_url
+                    # 使用映射表中的频道名称作为键，确保匹配正确
+                    channel_dict[matched_channel] = udpxy_url
                 else:
                     discarded_channels.append([channel_id, user_channel_id, channel_name, channel_url, "URL格式不正确"])
             
