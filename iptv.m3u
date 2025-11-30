@@ -77,8 +77,6 @@ http://192.168.1.13:23234/rtp/239.3.1.236:2000
 http://192.168.1.13:23234/rtp/239.3.1.244:2000
 #EXTINF:-1, tvg-name="CCTV4K", CCTV4K超高清HDR
 http://192.168.1.13:23234/rtp/239.3.1.245:2000
-#EXTINF:-1, tvg-name="CCTV16", CCTV-16 4K
-http://192.168.1.13:23234/rtp/239.3.1.183:8001
 #EXTINF:-1, tvg-name="北京卫视", BRTV北京卫视超高清SDR
 http://192.168.1.13:23234/rtp/239.3.1.22:8001
 #EXTINF:-1, tvg-name="北京卫视", BRTV北京卫视超高清HDR
