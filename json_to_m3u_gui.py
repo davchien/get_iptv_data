@@ -1,5 +1,5 @@
 # 北京联通IPTV抓包数据的处理的程序
-# 主要按表格生成m3u和txt两种播放列表，可用于IPTV、Tivimate等m3u或tvbox等txt播放。
+# 主要按表格生成m3u和txt两种播放列表，可用于IPTV、Tivimate等m3u或tvbox等txt播放
 
 import json
 import tkinter as tk
