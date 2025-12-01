@@ -155,8 +155,11 @@ class JSONtoM3UGUI:
             self.status_var.set("正在转换...")
             self.root.update()
             
+            # 获取脚本所在目录
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            
             # 读取频道映射CSV文件，只读取一次
-            mapping_file = r"d:/Users/chien/PycharmProjects/testcode/program/get_iptv_data/channel_mapping_utf8.csv"
+            mapping_file = os.path.join(script_dir, "channel_mapping_utf8.csv")
             channel_mapping_list = []
             channel_mapping_dict = {}
             
@@ -267,7 +270,9 @@ class JSONtoM3UGUI:
                 f.write('\n'.join(txt_content))
             
             # 写入被抛弃的频道CSV文件
-            discarded_csv_file = r"d:/Users/chien/PycharmProjects/testcode/program/get_iptv_data/iptv_discarded.csv"
+            discarded_csv_file = os.path.join(script_dir, "iptv_discarded.csv")
+            discarded_m3u_file = discarded_csv_file.rsplit('.', 1)[0] + '.m3u'
+            
             if discarded_channels:
                 with open(discarded_csv_file, 'w', newline='', encoding='utf-8') as f:
                     writer = csv.writer(f)
@@ -277,7 +282,6 @@ class JSONtoM3UGUI:
                     writer.writerows(discarded_channels)
                 
                 # 生成被抛弃频道的M3U文件
-                discarded_m3u_file = discarded_csv_file.rsplit('.', 1)[0] + '.m3u'
                 discarded_m3u_content = ["#EXTM3U x-tvg-url=\"http://epg.51zmt.top:8000/e.xml.gz\""]
                 
                 for channel_info in discarded_channels:
@@ -301,6 +305,11 @@ class JSONtoM3UGUI:
                 
                 discarded_info = f"，被抛弃的频道已记录到 {discarded_csv_file} 和 {discarded_m3u_file}"
             else:
+                # 如果没有被抛弃的频道，清空或删除之前的文件
+                if os.path.exists(discarded_csv_file):
+                    os.remove(discarded_csv_file)
+                if os.path.exists(discarded_m3u_file):
+                    os.remove(discarded_m3u_file)
                 discarded_info = "，没有被抛弃的频道"
             
             self.status_var.set(f"转换完成！生成了 {len(m3u_content) // 2} 个频道")
